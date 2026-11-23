@@ -1,0 +1,372 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wizard v1</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#121212;--muted:#454444;--rule:#e5e5e3;--red:#D43840;--red-dk:#A82C32;--red-lt:#E8666C;--red-tint:#fff0f0}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:36px 28px 48px}
+h1{font-weight:900;font-size:56px;letter-spacing:-2px;line-height:1;margin:0 0 14px}
+h2{font-weight:800;font-size:34px;letter-spacing:-1px;line-height:1.1;margin:0 0 8px}
+h4{font-weight:700;font-size:17px;letter-spacing:-.2px;line-height:1.2;margin:0}
+p{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
+.lead{font-size:18px;line-height:1.5;color:var(--muted);margin:0 0 26px;max-width:760px}
+.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.25em;color:var(--red);margin:0 0 10px}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.goal{border:1px solid var(--rule);border-radius:8px;padding:18px 18px 20px;background:#fff;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(18,18,18,.05);cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;text-align:left;font:inherit;color:inherit}
+.goal:hover{border-color:var(--red-lt);box-shadow:0 6px 18px rgba(212,56,64,.12);transform:translateY(-1px)}
+.hd{display:flex;gap:10px;align-items:center}
+.gi{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;font-size:20px;background:var(--red-tint);flex:none}
+/* wizard layout */
+.layout{display:grid;grid-template-columns:1fr 330px;gap:28px;align-items:start}
+.card{border:1px solid var(--rule);border-radius:8px;padding:30px 32px 26px;box-shadow:0 1px 3px rgba(18,18,18,.05);background:#fff}
+.bar{height:4px;background:var(--rule);border-radius:4px;margin:0 0 22px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#A82C32,#D43840 55%,#E8666C);transition:width .3s}
+.q{font-weight:800;font-size:28px;letter-spacing:-.8px;line-height:1.15;margin:0 0 6px}
+.sub{font-size:15px;color:var(--muted);margin:0 0 20px}
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+.opt{border:1.5px solid var(--rule);background:#fff;border-radius:8px;padding:12px 16px;font:500 15px Inter,sans-serif;color:var(--ink);cursor:pointer;transition:all .12s}
+.opt:hover{border-color:var(--red-lt)}
+.opt.on{border-color:var(--red);background:var(--red-tint);color:var(--red-dk);font-weight:700}
+.opts.col{flex-direction:column}.opts.col .opt{text-align:left}
+.pills .opt{padding:9px 14px;font-size:14px}
+input[type=text],input[type=email]{width:100%;border:1.5px solid var(--rule);border-radius:8px;padding:13px 14px;font:500 16px Inter,sans-serif;color:var(--ink);outline:none}
+input:focus{border-color:var(--red)}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.08em}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}.fields .full{grid-column:1/-1}
+.search{margin:0 0 14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.tile{position:relative;border:1.5px solid var(--rule);border-radius:8px;padding:14px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s,transform .15s}
+.tile:hover{border-color:var(--red-lt);transform:translateY(-2px);box-shadow:0 8px 20px rgba(212,56,64,.12)}
+.tile .ic{font-size:28px;line-height:1}
+.tile h4{font-size:15px;font-weight:800;margin:9px 0 4px;padding-right:22px}
+.tile p{font-size:13px;line-height:1.45;color:var(--muted);margin:0}
+.tile .ck{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800}
+.tile.on{border-color:var(--red);background:var(--red-tint)}.tile.on .ck{background:var(--red);border-color:var(--red)}
+.tile .nm{display:none;margin-top:10px}.tile.on .nm{display:block}
+.tile .nm input{padding:9px 11px;font-size:14px;background:#fff}
+.tiles.small .tile{padding:12px}.tiles.small .ic{font-size:20px}
+.more{margin-top:16px;font-size:14px;color:var(--muted)}
+.more button{background:none;border:0;color:var(--red);font:700 14px Inter,sans-serif;cursor:pointer;padding:0}
+.counter{display:inline-flex;align-items:center;background:var(--red-tint);color:var(--red-dk);font-weight:800;font-size:13px;padding:8px 14px;border-radius:20px}
+.boost{display:none;margin:20px 0 0;padding:16px 18px;border-radius:8px;background:var(--red-tint);border-left:4px solid var(--red)}
+.boost.show{display:block;animation:pop .25s ease}
+.boost b{display:block;font-size:16px;color:var(--ink);margin:0 0 3px}
+.boost span{font-size:14px;line-height:1.5;color:var(--muted)}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:26px;padding-top:18px;border-top:1px solid var(--rule)}
+.btn{border:0;border-radius:4px;padding:13px 24px;font:700 13px Inter,sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;background:var(--red);color:#fff}
+.btn:hover{background:var(--red-dk)}
+.btn:disabled{background:#e5e5e3;color:#999;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--rule)}
+.btn.ghost:hover{background:#f7f7f5}
+.btn.sec{background:transparent;color:var(--red);border:2px solid var(--red)}
+.btn.sec:hover{background:var(--red-tint)}
+.link{background:none;border:0;color:var(--muted);font:600 14px Inter,sans-serif;cursor:pointer;text-decoration:underline;padding:0}
+/* meter */
+.meter{border:1px solid var(--rule);border-radius:8px;overflow:hidden;position:sticky;top:20px;box-shadow:0 1px 3px rgba(18,18,18,.05)}
+.meter .top{background:linear-gradient(90deg,#A82C32,#D43840 55%,#E8666C);color:#fff;padding:18px 20px}
+.meter .top .eyebrow{color:#fff;opacity:.85;margin:0 0 6px}
+.meter .who{font-weight:800;font-size:20px;letter-spacing:-.4px}
+.meter .amt{padding:18px 20px 6px}
+.meter .amt small{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--muted)}
+.meter .amt div{font-weight:900;font-size:30px;letter-spacing:-1px;color:var(--red);line-height:1.15;margin-top:4px}
+.meter ul{list-style:none;margin:0;padding:8px 20px 18px}
+.meter li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--rule);font-size:14px;color:#999}
+.meter li:first-child{border-top:0}
+.meter li .ck{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--rule);flex:none;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff}
+.meter li.done{color:var(--ink)}.meter li.done .ck{background:var(--red);border-color:var(--red)}
+.meter li em{font-style:normal;display:block;font-size:12px;color:var(--muted)}
+/* results */
+.big{display:flex;gap:20px;align-items:center;padding:24px 26px;border-radius:8px;background:linear-gradient(90deg,#A82C32,#D43840 55%,#E8666C);color:#fff;box-shadow:0 12px 30px rgba(212,56,64,.3);margin:4px 0 18px}
+.big small{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;opacity:.9}
+.big .n{font-weight:900;font-size:44px;letter-spacing:-1.5px;line-height:1.05}
+.rows{border:1px solid var(--rule);border-radius:8px}
+.rows div{display:flex;justify-content:space-between;gap:16px;padding:13px 16px;border-top:1px solid var(--rule);font-size:15px}
+.rows div:first-child{border-top:0}
+.rows b{color:var(--red);white-space:nowrap}
+.fine{font-size:12px;color:#888;margin-top:12px;line-height:1.5}
+.known{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.known span{background:#f7f7f5;border:1px solid var(--rule);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:600}
+.msg{border:1px solid var(--rule);border-radius:8px;margin:0 0 14px}
+.msg .mh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--rule);background:#fafaf9;border-radius:8px 8px 0 0}
+.msg .mh b{font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.msg pre{white-space:pre-wrap;font:400 15px/1.6 Inter,sans-serif;margin:0;padding:16px;color:var(--ink)}
+.copy{padding:8px 14px;font-size:12px}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.saved{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:8px;background:#f7f7f5;margin:0 0 20px;font-size:15px}
+.saved .ck{width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+details.dev{margin-top:22px;font-size:13px;color:var(--muted)}
+details.dev summary{cursor:pointer;font-weight:600}
+details.dev code{display:block;white-space:pre-wrap;background:#f7f7f5;border-radius:6px;padding:12px;margin-top:8px;font-size:12px}
+.err{color:var(--red);font-size:13px;margin-top:10px;min-height:1em}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#121212;color:#fff;padding:12px 18px;border-radius:6px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1}
+.layout>*{min-width:0}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.meter{position:static;order:-1}.meter ul{display:none}.g{grid-template-columns:1fr}h1{font-size:40px}}
+@media(max-width:600px){.wrap{padding:20px 14px 36px}.fields,.choice{grid-template-columns:1fr}.card{padding:22px 18px}.q{font-size:23px}.big{padding:18px}.big .n{font-size:28px}.rows div{flex-direction:column;gap:2px}.nav .btn{padding:12px 16px}}
+</style></head><body><div class="wrap" id="app"></div><div class="toast" id="toast"></div>
+<script>
+// Strongest Cost Seg fits, from 📗 How GMG Explains Its Services to Advisors (high qualifiers + best-fit properties)
+const TOP=["Hotel","Manufacturer","Apartment complex","Auto dealer","Restaurant","Medical or dental office","Senior living","Rental property owner","Property management","Funeral home"];
+const OTHERS=["Retail store","Office building owner","Gym","Daycare","Veterinarian","Chiropractor","Car wash","Brewery","Contractor","Construction","Hospital","Trucking","Tech company","Farm","Real estate developer","Law firm","Accounting firm","Salon or spa","Engineering firm","Plumbing or HVAC","Landscaping","Insurance agency"];
+const OTHERS_C=["Retail store","Office building owner","Gym","Daycare","Veterinarian","Car wash","Brewery","Contractor"];
+const INDUSTRIES=TOP.concat(OTHERS);
+// Path 3 tiles: one-line reasons from the same page
+const TOP_HOOKS=[
+ ["🏨","Hotel","Walk into 10 hotels and 8 or 9 have never done Cost Seg."],
+ ["🏭","Manufacturer","Often qualify for more than one incentive, building and people."],
+ ["🏢","Apartment complex","One of the most often missed property types."],
+ ["🚗","Auto dealer","Brands make them remodel every 5–7 years. Every remodel is a new study."],
+ ["🍽️","Restaurant","Build-outs count, even in a leased space."],
+ ["🦷","Medical or dental office","More rooms, plumbing and wiring means more savings."],
+ ["🏡","Senior living","Often missed, and usually a big building."],
+ ["🔑","Rental property owner","Rental portfolios run as a business are a top fit."],
+ ["📋","Property management","Often missed, and they know lots of other owners."],
+ ["🕊️","Funeral home","A best-fit property most people never think of."]];
+const VALUES=[{t:"Under $500,000",lo:0,hi:500000},{t:"$500,000 – $1 million",lo:500000,hi:1000000},{t:"$1 million – $3 million",lo:1000000,hi:3000000},{t:"Over $3 million",lo:3000000,hi:null},{t:"No idea",unk:1}];
+const EMPS=[{t:"Just the owner",lo:0,hi:0},{t:"1–10",lo:1,hi:10},{t:"11–25",lo:11,hi:25},{t:"26–50",lo:26,hi:50},{t:"51–100",lo:51,hi:100},{t:"More than 100",lo:100,hi:null},{t:"Not sure",unk:1}];
+const RELS={A:[["client","They're already my client"],["friend","A friend or family member"],["biz","A business contact"],["know","I know of them, but we haven't connected"]],
+            C:[["client","They're already my client"],["friend","I know the owner personally"],["biz","Through business or networking"],["know","I just know the business"]]};
+const COST_SEG=0.074, MFG_PER=3200, NON_PER=0.20*2400;
+
+let S, step;
+function reset(){S={path:null,first:"",last:"",company:"",email:"",rel:null,industry:null,other:"",owns:null,otherProp:null,value:null,emp:null,saved:false,picks:[],cands:{},done:[]};step="start";render()}
+const $=s=>document.querySelector(s);
+const money=n=>"$"+Math.round(n).toLocaleString();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const who=()=>S.first||S.company||"this business";
+const ind=()=>S.industry==="Something else"?(S.other||"business"):S.industry;
+const isMfg=()=>S.industry==="Manufacturer";
+const hasProp=()=>S.owns==="yes"||S.otherProp==="yes";
+
+function savings(){
+  const parts=[];let lo=0,hi=0,open=false;
+  if(hasProp()&&S.value!=null&&!VALUES[S.value].unk){const v=VALUES[S.value];const a=v.lo*COST_SEG,b=v.hi==null?null:v.hi*COST_SEG;
+    parts.push({label:"Cost Segregation (the building)",lo:a,hi:b});lo+=a;if(b==null)open=true;else hi+=b;}
+  if(S.emp!=null&&!EMPS[S.emp].unk&&EMPS[S.emp].lo>0){const e=EMPS[S.emp],per=isMfg()?MFG_PER:NON_PER;const a=e.lo*per,b=e.hi==null?null:e.hi*per;
+    parts.push({label:"Employee-based tax credits",lo:a,hi:b});lo+=a;if(b==null)open=true;else hi+=b;}
+  return {parts,lo,hi,open};
+}
+const rangeTxt=(lo,hi,open)=>open||hi==null?money(lo)+"+":(lo===0?"Up to "+money(hi):money(lo)+" – "+money(hi));
+
+// step lists per path
+function steps(){
+  if(S.path==="C")return["multi","rel","owns","emp","details","preview","kit"];
+  return["name","industry","owns","emp","details","preview",S.path==="A"?"next":"kit"];
+}
+function go(n){step=n;render();window.scrollTo({top:0,behavior:"smooth"})}
+function nextStep(){const L=steps();let i=L.indexOf(step)+1;if(L[i]==="value"&&!hasProp())i++;go(L[i])}
+function prevStep(){const L=steps();let i=L.indexOf(step)-1;if(L[i]==="value"&&!hasProp())i--;go(i<0?"start":L[i])}
+
+function render(){
+  const app=$("#app");
+  if(step==="start"){app.innerHTML=startHTML();return}
+  if(step==="calc"||step==="kit"||step==="intro"||step==="next"){app.innerHTML=`<div class="layout"><div class="card">${SCREENS[step]()}</div>${meterHTML()}</div>`;after();return}
+  const L=steps(),i=L.indexOf(step),pct=Math.round((i+1)/L.length*100);
+  app.innerHTML=`<div class="layout"><div class="card"><div class="eyebrow">${esc(pathName())} · Step ${i+1} of ${L.length}</div><div class="bar"><i style="width:${pct}%"></i></div>${SCREENS[step]()}</div>${meterHTML()}</div>`;
+  after();
+}
+function pathName(){return{A:"What might they qualify for?",B:"Where do I start?",C:"Find someone"}[S.path]}
+
+function startHTML(){return`
+<div class="eyebrow">Advisor Toolbox</div>
+<h1>Let's uncover your next opportunity</h1>
+<p class="lead">You could be the reason a business owner discovers hundreds of thousands, or even millions, in hidden tax savings. Which sounds most like you?</p>
+<div class="g">
+<button class="goal" onclick="S.path='A';go('name')"><div class="hd"><span class="gi">🔍</span><h4>I have someone in mind. What might they qualify for?</h4></div><p>Help me discover their potential tax savings.</p></button>
+<button class="goal" onclick="S.path='B';go('name')"><div class="hd"><span class="gi">🤝</span><h4>I know someone, but I don't know where to start.</h4></div><p>Walk me through what to do and how to approach them.</p></button>
+<button class="goal" onclick="S.path='C';go('multi')"><div class="hd"><span class="gi">💡</span><h4>I can't think of anyone. Help me find someone.</h4></div><p>Walk me through finding someone I could help.</p></button>
+</div>`}
+
+function meterHTML(){
+  const s=savings(),v=S.value!=null?VALUES[S.value]:null,e=S.emp!=null?EMPS[S.emp]:null;
+  const li=(done,t,d)=>`<li class="${done?"done":""}"><span class="ck">${done?"✓":""}</span><div>${t}${done&&d?`<em>${esc(d)}</em>`:""}</div></li>`;
+  const relTxt=S.rel?(RELS[S.path==="C"?"C":"A"].find(r=>r[0]===S.rel)||[])[1]:"";
+  const ownTxt=S.owns==="yes"?"Owns the building":S.owns==="unsure"?"Not sure yet (a great question to ask)":S.owns==="no"?(S.otherProp==="yes"?"Rents, but owns other property":S.otherProp?"Rents":""):"";
+  return`<aside class="meter"><div class="top"><div class="eyebrow">Opportunity</div><div class="who">${esc(S.first?S.first+(S.company?" · "+S.company:""):(S.company||"Your next client"))}</div></div>
+  <div class="amt"><small>Potential tax savings</small><div>${!S.saved?`<span style="font-size:15px;font-weight:700;color:var(--muted);letter-spacing:0">🔒 Unlocks with ${esc(S.first||"their")}${S.first?"'s":""} results</span>`:s.parts.length?rangeTxt(s.lo,s.hi,s.open):"Let's find out"}</div></div>
+  <ul>${li(!!S.rel,"How you know them",relTxt)}${li(!!S.industry,"Industry",S.industry?ind():"")}${li(S.owns&&(S.owns!=="no"||S.otherProp),"Property",ownTxt)}${li(v,"Building value",v?v.t:"")}${li(e,"Employees",e?e.t:"")}${li(S.saved,"Saved to My Clients",S.saved?"Client card created":"")}</ul></aside>`}
+
+function opts(key,list,cls=""){return`<div class="opts ${cls}">${list.map(([v,t])=>`<button class="opt ${S[key]===v?"on":""}" onclick="pick('${key}','${v}')">${esc(t)}</button>`).join("")}</div>`}
+function navHTML(ok,label="Continue"){return`<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" id="nx" ${ok?"":"disabled"} onclick="nextStep()">${label} →</button></div>`}
+function boost(t,b){return`<div class="boost ${t?"show":""}"><b>${t||""}</b><span>${b||""}</span></div>`}
+function pick(k,v){S[k]=isNaN(v)||v===""?v:(k==="value"||k==="emp"?+v:v);if(k==="owns"&&v!=="no")S.otherProp=null;if((k==="owns"||k==="otherProp")&&!hasProp())S.value=null;render()}
+function pillsHTML(isOn,click,others){const b=t=>`<button class="opt ${isOn(t)?"on":""}" data-t="${esc(t.toLowerCase())}" onclick="${click}('${t}')">${isOn(t)&&click==="togglePick"?"✓ ":""}${esc(t)}</button>`;
+  return`<div id="pills"><div class="eyebrow" style="margin:4px 0 10px">⭐ Strongest for Cost Seg</div><div class="opts pills">${TOP.map(b).join("")}</div>
+  <div class="eyebrow" style="margin:22px 0 10px;color:var(--muted)">Other businesses</div><div class="opts pills">${others.concat("Something else").map(b).join("")}</div></div>`}
+function pickInd(t){pick("industry",t)}
+function submitName(){if(S.first.trim()){S.nameDone=true;render()}}
+function relBlock(){const n=esc(who());const list=RELS[S.path==="C"?"C":"A"];const B={
+client:["You're already in a great position!",`${n} already trusts you. Bringing them money they didn't know about makes you look even better.`],
+friend:["The easiest conversation you'll have.",`You're not selling anything. You're looking out for someone you care about.`],
+biz:["A natural fit.",`Helping ${n} find hidden savings is a strong reason to reconnect, and it makes you memorable.`],
+know:["That's a fine place to start.",`You don't need a close relationship. Offering to check for free savings is an easy, welcome reason to connect.`]}[S.rel]||[];
+return{html:opts("rel",list,"col"),B}}
+
+const SCREENS={
+name(){const has=S.nameDone&&S.first.trim();const r=relBlock();return`
+<div class="q">Who came to mind?</div><p class="sub">Just their first name. That's all we need to get started.</p>
+<div style="display:flex;gap:10px"><input type="text" id="fn" placeholder="First name" value="${esc(S.first)}" oninput="S.first=this.value" onkeydown="if(event.key==='Enter')submitName()"><button class="btn" style="flex:none" onclick="submitName()">${has?"Update":"Go"}</button></div>
+${has?`<div style="margin-top:28px"><div class="q" style="font-size:22px">How do you know ${esc(S.first)}?</div><p class="sub">This helps us shape the right approach for you.</p>${r.html}</div>`:""}
+${boost(r.B[0],r.B[1])}${navHTML(has&&!!S.rel)}`},
+
+rel(){const n=esc(who());const r=relBlock();
+return`<div class="q">How do you know ${n}?</div><p class="sub">This helps us shape the right approach for you.</p>${r.html}${boost(r.B[0],r.B[1])}${navHTML(!!S.rel)}`},
+
+industry(){const C=S.path==="C";const q=C?"Do you know anyone who owns one of these?":`What kind of business does ${esc(who())} have?`;
+const sub=C?"A client, a friend, a business you visit, or someone you've met. Tap the first one that brings someone to mind.":"Pick the closest match.";
+const B=S.industry?(C?["Great place to start looking!",`Think of a ${esc(ind().toLowerCase())} you visit, an owner you've met, or someone who could introduce you.`]:
+ isMfg()?["Manufacturers are some of our best fits.","They often qualify for more than one incentive, from the building to the people they employ."]:
+ ["Good to know!",`${esc(ind())} owners can have overlooked tax savings tied to their building and their employees.`]):[];
+return`<div class="q">${q}</div><p class="sub">${sub}</p>
+<div class="search"><input type="text" id="srch" placeholder="Search industries…" oninput="filterInd(this.value)"></div>
+<div class="opts pills" id="pills">${INDUSTRIES.concat("Something else").map(t=>`<button class="opt ${S.industry===t?"on":""}" data-t="${esc(t.toLowerCase())}" onclick="pickInd('${t}')">${esc(t)}</button>`).join("")}</div>
+${S.industry==="Something else"?`<div style="margin-top:14px"><input type="text" placeholder="What kind of business?" value="${esc(S.other)}" oninput="S.other=this.value"></div>`:""}
+${boost(B[0],B[1])}${navHTML(!!S.industry)}`},
+
+multi(){const tile=(ic,t,h)=>{const on=S.picks.includes(t);return`<div class="tile ${on?"on":""}" onclick="if(event.target.tagName!=='INPUT')togglePick('${t}')"><span class="ck">${on?"✓":""}</span><div class="ic">${ic}</div><h4>${esc(t)}</h4>${h?`<p>${h}</p>`:""}<div class="nm"><input type="text" data-p="${esc(t)}" placeholder="Business name" value="${esc(S.cands[t]||"")}" oninput="S.cands['${t}']=this.value;multiState()"></div></div>`};
+return`<div class="q">Who do you know that owns one of these?</div>
+<p class="sub">Think about your area: the hotel down the street, the restaurant you love, your dentist, the dealership you buy from. These are the businesses that win biggest with Cost Seg. Tap any you know, even a little, and add the business name.</p>
+<div class="tiles">${TOP_HOOKS.map(([ic,t,h])=>tile(ic,t,h)).join("")}</div>
+${S.showMore?`<div class="eyebrow" style="margin:24px 0 10px;color:var(--muted)">Other businesses</div><div class="tiles small">${OTHERS_C.concat("Something else").map(t=>tile("🏪",t==="Something else"?"Another business":t,"")).join("")}</div>`
+:`<div class="more">Know a different kind of business? <button onclick="S.showMore=true;render()">See more businesses →</button></div>`}
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><span style="display:flex;gap:14px;align-items:center"><span class="counter" id="mcnt"></span><button class="btn" id="nx" onclick="startCand(S.picks.find(t=>(S.cands[t]||'').trim()))">Continue →</button></span></div>`},
+
+cands(){const ok=S.picks.some(t=>(S.cands[t]||"").trim());return`
+<div class="q">Which businesses come to mind?</div>
+<p class="sub">Type the name for each one. The business name is enough. You don't need to know the owner yet.</p>
+<div class="fields">${S.picks.map(t=>`<div class="full"><label class="f">${esc(t==="Something else"?"Another business":t)}</label><input type="text" placeholder="Business name" value="${esc(S.cands[t]||"")}" oninput="S.cands['${t}']=this.value;$('#nx').disabled=!S.picks.some(x=>(S.cands[x]||'').trim())"></div>`).join("")}</div>
+${boost("","")}<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" id="nx" ${ok?"":"disabled"} onclick="startCand(S.picks.find(t=>(S.cands[t]||'').trim()))">Start with the first one →</button></div>`},
+
+bizname(){const ok=S.company.trim().length>0;return`
+<div class="q">What's the name of the ${esc(ind().toLowerCase())} you're thinking of?</div><p class="sub">Just the business name is enough to get started.</p>
+<input type="text" placeholder="Business name" value="${esc(S.company)}" oninput="S.company=this.value;$('#nx').disabled=!this.value.trim()" onkeydown="if(event.key==='Enter'&&this.value.trim())nextStep()">
+${boost("","")}${navHTML(ok,"Let's explore")}`},
+
+owns(){const n=esc(who());let B=[];
+if(S.owns==="yes")B=["That's an important discovery!",`${n}'s building may hold significant tax savings that haven't been uncovered yet. And you don't have to figure it out. GMG handles the analysis.`];
+if(S.owns==="unsure")B=["No problem. You don't need to know yet.",`You've just found a great first question to ask. We'll give you the words.`];
+if(S.owns==="no"&&S.otherProp==="yes")B=["Even better than you thought.","Rental and commercial property can hold the same kind of savings as a business building."];
+if(S.owns==="no"&&S.otherProp&&S.otherProp!=="yes")B=["Good to know.","There may still be savings tied to the people they employ. Let's keep going."];
+const v=S.value!=null?VALUES[S.value]:null;
+if(hasProp()&&v)B=v.unk?["That's okay!","You don't need all the answers. The real numbers come from their free Cash Recovery Analysis."]:["Now we're getting somewhere!","Property in this range can hold real savings. You'll see the numbers in just a moment."];
+const ok=S.owns&&(S.owns!=="no"||S.otherProp)&&(!hasProp()||S.value!=null);
+return`<div class="q">Does ${n} own the building where the business operates?</div><p class="sub">Your best guess is fine.</p>
+${opts("owns",[["yes","Yes, they own it"],["no","No, they rent"],["unsure","I'm not sure"]])}
+${S.owns==="no"?`<p class="sub" style="margin:22px 0 10px;font-weight:600;color:var(--ink)">Do they own any other commercial or rental property?</p>${opts("otherProp",[["yes","Yes"],["none","No"],["unsure","I'm not sure"]])}`:""}
+${hasProp()?`<div style="margin-top:28px"><div class="q" style="font-size:22px">Any idea what it's worth?</div><p class="sub">A rough guess is fine.</p>${opts("value",VALUES.map((x,i)=>[i,x.t]))}</div>`:""}
+${boost(B[0],B[1])}${navHTML(ok)}`},
+
+value(){const n=esc(who());const v=S.value!=null?VALUES[S.value]:null;let B=[];
+if(v&&v.unk)B=["That's okay!","You don't need all the answers. The real numbers come from their free Cash Recovery Analysis."];
+else if(v)B=["Now we're getting somewhere!","Buildings in this range can hold real savings. You'll see the numbers in just a moment."];
+return`<div class="q">Any idea what the property is worth?</div><p class="sub">A rough guess is fine.</p>
+${opts("value",VALUES.map((x,i)=>[i,x.t]))}${boost(B[0],B[1])}${navHTML(S.value!=null)}`},
+
+emp(){const n=esc(who());const e=S.emp!=null?EMPS[S.emp]:null;let B=[];
+if(e&&e.unk)B=["No problem!","GMG can look at employee-based credits once there's more information."];
+else if(e&&e.lo===0)B=["Good to know.","We'll focus on the property."];
+else if(e)B=["Even better. There may be more than one way to help!","Businesses with employees can qualify for employee-based tax credits on top of the building."];
+return`<div class="q">About how many employees does ${n} have?</div><p class="sub">Your best guess is fine.</p>
+${opts("emp",EMPS.map((x,i)=>[i,x.t]))}${boost(B[0],B[1])}${navHTML(S.emp!=null)}`},
+
+preview(){const n=esc(who()),s=savings();const v=S.value!=null?VALUES[S.value]:null,e=S.emp!=null?EMPS[S.emp]:null;
+const desc=[`a ${esc(ind().toLowerCase())}`];if(hasProp()&&v&&!v.unk)desc.push(`a ${v.t.toLowerCase()} building`);if(e&&!e.unk&&e.lo>0)desc.push(`${e.t} employees`);
+const head=s.parts.length?`<div class="big"><div><small>Businesses like ${n}'s typically uncover</small><div class="n">${rangeTxt(s.lo,s.hi,s.open)}</div></div></div>
+<div class="rows">${s.parts.map(p=>`<div><span>${p.label}</span><b>${rangeTxt(p.lo,p.hi,p.hi==null)}</b></div>`).join("")}${S.owns==="unsure"||S.otherProp==="unsure"?`<div><span>Cost Segregation, if they own the building</span><b>Worth asking</b></div>`:""}</div>`
+:`<div class="big"><div><small>The opportunity</small><div class="n" style="font-size:30px">Let's find out together</div></div></div><p>We don't have enough yet for an estimate, and that's fine. ${n}'s free Cash Recovery Analysis will show the real numbers.</p>`;
+return`${savedHTML()}<div class="q">Here's what you could do for ${n}</div><p class="sub">Based on ${desc.join(", ")}.</p>${head}
+<p class="fine">An illustration based on typical results for businesses like this. Not a calculated estimate or guarantee. ${n}'s actual savings come from their Cash Recovery Analysis.</p>
+<p style="margin-top:18px;font-size:16px;color:var(--ink)"><b>You bring the relationship. GMG brings the expertise.</b> You don't have to know the tax rules or run the numbers.</p>
+<div class="nav"><button class="btn ghost" onclick="go('details')">← Back</button><button class="btn" onclick="nextStep()">${S.path==="A"?"What's next":"Help me approach "+n} →</button></div>`},
+
+details(){const C=S.path==="C";const n=esc(who());
+const who2=C?esc(S.company):n;
+return`<div class="q">Let's customize ${who2}'s results</div>
+<p class="sub">Just 3 quick details and we'll tailor the savings picture and your approach. We won't contact them. You stay in control.</p>
+<div class="fields">
+${C?`<div><label class="f">Owner's first name</label><input type="text" id="d1" value="${esc(S.first)}" oninput="S.first=this.value"></div>
+<div><label class="f">Owner's last name</label><input type="text" id="d2" value="${esc(S.last)}" oninput="S.last=this.value"></div>`
+:`<div><label class="f">${n}'s last name</label><input type="text" id="d2" value="${esc(S.last)}" oninput="S.last=this.value"></div>
+<div><label class="f">Business name</label><input type="text" id="d3" value="${esc(S.company)}" oninput="S.company=this.value"></div>`}
+<div class="full"><label class="f">${C?"Owner's":n+"'s"} email</label><input type="email" id="d4" value="${esc(S.email)}" oninput="S.email=this.value"></div>
+</div><div class="err" id="err"></div>
+${C?`<p style="margin-top:6px"><button class="link" onclick="go('intro')">I don't know the owner's name or email yet</button></p>`:""}
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" onclick="save()">Show ${who2}'s results →</button></div>`},
+
+next(){const n=esc(who());return`
+<div class="q">What would you like to do next?</div><p class="sub">Two ways to turn ${n}'s potential into a real opportunity.</p>
+<div class="choice">
+<button class="goal" onclick="go('calc')"><div class="hd"><span class="gi">🧮</span><h4>Let's calculate ${n}'s savings</h4></div><p>I have ${n}'s info, or I'm with ${n} right now. Build the Cash Recovery Analysis.</p></button>
+<button class="goal" onclick="go('kit')"><div class="hd"><span class="gi">💬</span><h4>Help me approach ${n}</h4></div><p>Give me the words to start the conversation.</p></button>
+</div>${devHTML()}`},
+
+calc(){const n=esc(who());return`<div class="eyebrow">Cash Recovery Analysis</div>
+<div class="q">Let's put real numbers behind it</div><p class="sub">${n}'s record is saved, so we already have a head start.</p>
+<div class="known"><span>${esc(S.company)}</span><span>${esc(ind())}</span>${S.value!=null?`<span>${esc(VALUES[S.value].t)}</span>`:""}${S.emp!=null?`<span>${esc(EMPS[S.emp].t)} employees</span>`:""}</div>
+<div class="msg"><div class="mh"><b>With ${n} right now? Say this</b></div><pre>"${S.first||"Hi"}, I want to show you something. Your building might qualify for tax savings that could put real money back into the business. Let's answer a few questions together and see what the numbers look like."</pre></div>
+<div class="nav"><button class="btn ghost" onclick="go(S.path==='A'?'next':'kit')">← Back</button><button class="btn" onclick="toast('In the live version, this opens the calculator with ${n}\\'s saved record.')">Open ${n}'s Cash Recovery Analysis →</button></div>`},
+
+kit(){const n=esc(who());const m=messages();return`
+<div class="eyebrow">Your approach</div><div class="q">Here's how to start the conversation with ${n}</div>
+<p class="sub">Written for how you know ${n}. Send it yourself, your way.</p>
+<div class="msg"><div class="mh"><b>Text message</b><button class="btn sec copy" onclick="copy('t1')">Copy</button></div><pre id="t1">${esc(m.text)}</pre></div>
+<div class="msg"><div class="mh"><b>Email</b><button class="btn sec copy" onclick="copy('t2')">Copy</button></div><pre id="t2">${esc(m.email)}</pre></div>
+<div class="msg"><div class="mh"><b>If ${n} says yes</b></div><pre>${esc(m.yes)}</pre></div>
+<div class="nav"><button class="btn ghost" onclick="${S.path==="A"?"go('next')":"reset()"}">${S.path==="A"?"← Back":"Start another"}</button><button class="btn" onclick="go('calc')">Build ${n}'s Cash Recovery Analysis →</button></div>${nextUpHTML()}${S.path==="A"?"":devHTML()}`},
+
+intro(){const b=esc(S.company);const m=`Hi, I know we haven't had a chance to connect yet, but I wanted to reach out. I help business owners find tax savings they've overlooked, especially owners of commercial property. I thought ${S.company} might be worth a look. Would you be open to a quick conversation?`;
+return`<div class="eyebrow">Your first move</div><div class="q">Here's a simple way to open the door with ${b}</div>
+<p class="sub">Once you have the owner's name and email, come back and we'll save them to your clients and build their analysis.</p>
+<div class="msg"><div class="mh"><b>Introduction</b><button class="btn sec copy" onclick="copy('t3')">Copy</button></div><pre id="t3">${esc(m)}</pre></div>
+<div class="nav"><button class="btn ghost" onclick="go('details')">← Back</button><button class="btn" onclick="reset()">Find another opportunity →</button></div>${nextUpHTML()}`}
+};
+
+function savedHTML(){return`<div class="saved"><span class="ck">✓</span><div><b>${esc(S.first)} ${esc(S.last)} at ${esc(S.company)} is saved to your clients.</b><br><span style="color:var(--muted);font-size:14px">You're one step closer to helping ${esc(who())} uncover hidden tax savings.</span></div></div>`}
+
+function messages(){
+  const n=S.first||"there",biz=ind().toLowerCase(),own=hasProp();
+  const ask=own?"":` Quick question: do you own the building, or lease it?`;
+  const open={client:`Hi ${n}, I came across something I thought of you for right away.`,
+    friend:`Hey ${n}, random question for you.`,
+    biz:`Hi ${n}, hope business is going well. Something came up that made me think of you.`,
+    know:`Hi ${n}, we haven't connected yet, but I wanted to reach out.`}[S.rel]||`Hi ${n},`;
+  const text=`${open} I've been helping business owners find tax savings they didn't know they had, and your ${biz} looks like a good fit.${ask} Happy to have a free analysis run for you. No cost to look.`;
+  const email=`Subject: ${n}, worth a quick look\n\n${open}\n\nI've been working with GMG to help business owners uncover tax savings that usually get missed${own?", especially owners of their own buildings":""}. Businesses like yours often find real money here.\n\nI can have a free Cash Recovery Analysis put together for ${S.company||"you"}. It just takes a few details and shows exactly what's there.\n\nWant me to set it up?\n\n[Your name]`;
+  const yes=`"Great. I'll get your free Cash Recovery Analysis started. It shows what your ${own?"building and ":""}business could qualify for, and there's no cost to see it."`;
+  return{text,email,yes}
+}
+
+function devHTML(){const tags=["wizard-v1","wizard-path-"+S.path,"wizard-rel-"+S.rel,"wizard-own-"+(S.owns==="no"?(S.otherProp==="yes"?"other-property":"no"):S.owns),
+  S.value!=null?"wizard-value-"+["u500k","500k-1m","1m-3m","3m-plus","unknown"][S.value]:null,S.emp!=null?"wizard-emp-"+["0","1-10","11-25","26-50","51-100","100-plus","unknown"][S.emp]:null].filter(Boolean);
+  return`<details class="dev"><summary>What gets saved (for the build team)</summary><code>Client Creator Short
+first name: ${esc(S.first)}
+last name: ${esc(S.last)}
+email: ${esc(S.email)}
+company: ${esc(S.company)}
+industry: ${esc(ind())}
+
+Tags: ${tags.join(", ")}
+
+No client emails: wizard entries are kept out of ActiveCampaign client follow-up.</code></details>`}
+
+function save(){const e=$("#err");
+  if(!S.first.trim()||!S.last.trim()||!S.company.trim()){e.textContent="Please fill in first name, last name and business name.";return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim())){e.textContent="Please enter their email address.";return}
+  S.saved=true;go("preview")}
+function togglePick(t){const i=S.picks.indexOf(t);if(i>=0)S.picks.splice(i,1);else S.picks.push(t);render();
+  if(i<0){const f=document.querySelector(`.tile input[data-p="${t}"]`);if(f)f.focus()}}
+function multiState(){const named=S.picks.filter(t=>(S.cands[t]||"").trim()).length,c=$("#mcnt"),b=$("#nx");if(!c)return;
+  c.textContent=named===0?(S.picks.length?"Add a business name to continue":"Tap a business you know"):named===1?"🎉 1 opportunity found":`🎉 ${named} opportunities found`;
+  b.disabled=named===0}
+function startCand(t){S.industry=t;S.company=S.cands[t]||"";go("rel")}
+function nextUp(){return S.picks.filter(t=>(S.cands[t]||"").trim()&&t!==S.industry&&!S.done.includes(t))}
+function nextCand(t){S.done.push(S.industry);Object.assign(S,{first:"",last:"",email:"",rel:null,owns:null,otherProp:null,value:null,emp:null,saved:false});startCand(t)}
+function nextUpHTML(){if(S.path!=="C")return"";const L=nextUp();if(!L.length)return"";
+  return`<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--rule)"><div class="eyebrow">Next up on your list</div><div class="opts">${L.map(t=>`<button class="opt" onclick="nextCand('${t}')">${esc(S.cands[t])} <span style="color:var(--muted);font-weight:400">· ${esc(t==="Something else"?"Business":t)}</span> →</button>`).join("")}</div></div>`}
+function filterInd(q){q=q.toLowerCase().trim();document.querySelectorAll("#pills .opt").forEach(b=>{b.style.display=!q||b.dataset.t.includes(q)||b.dataset.t==="something else"?"":"none"})}
+function copy(id){navigator.clipboard&&navigator.clipboard.writeText($("#"+id).textContent);toast("Copied")}
+function toast(t){const x=$("#toast");x.textContent=t;x.classList.add("show");clearTimeout(x._t);x._t=setTimeout(()=>x.classList.remove("show"),2600)}
+function after(){if(step==="multi")multiState();const f=document.querySelector(".card input[type=text]");if(f&&((step==="name"&&!S.nameDone)||step==="bizname")){f.focus();f.setSelectionRange(f.value.length,f.value.length)}}
+reset();
+</script></body></html>
