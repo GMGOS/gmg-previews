@@ -48,6 +48,22 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:0
 .more{margin-top:16px;font-size:14px;color:var(--muted)}
 .more button{background:none;border:0;color:var(--red);font:700 14px Inter,sans-serif;cursor:pointer;padding:0}
 .counter{display:inline-flex;align-items:center;background:var(--red-tint);color:var(--red-dk);font-weight:800;font-size:13px;padding:8px 14px;border-radius:20px}
+.lrow{display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:start;padding:14px 0;border-top:1px solid var(--rule)}
+.lname{display:flex;gap:10px;align-items:center}.lname .gi{width:40px;height:40px;font-size:20px}
+.lrow .lname{padding-top:2px}
+.opt.sm{padding:8px 12px;font-size:13px}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.tcard{border:1px solid var(--rule);border-radius:8px;padding:16px}
+.tcard h4{margin:0}.tcard p{font-size:13px;margin:2px 0 0}
+.lock{margin-top:12px;font-size:13px;font-weight:700;color:var(--red-dk);background:var(--red-tint);border-radius:6px;padding:8px 10px}
+.crow{padding:16px 0;border-top:1px solid var(--rule)}
+.cf{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 6px}
+.laterNote{font-size:14px;color:var(--muted);margin-top:8px}
+.crow.later .lname{opacity:.6}
+.rcard{border:1px solid var(--rule);border-radius:8px;padding:18px;margin:0 0 14px}
+.rh{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.ramt{font-weight:900;font-size:22px;color:var(--red);white-space:nowrap}
+@media(max-width:700px){.lrow{grid-template-columns:1fr;gap:8px}.cf{grid-template-columns:1fr}.rh{flex-direction:column;align-items:flex-start}}
 .boost{display:none;margin:20px 0 0;padding:16px 18px;border-radius:8px;background:var(--red-tint);border-left:4px solid var(--red)}
 .boost.show{display:block;animation:pop .25s ease}
 .boost b{display:block;font-size:16px;color:var(--ink);margin:0 0 3px}
@@ -141,11 +157,12 @@ const ind=()=>S.industry==="Something else"?(S.other||"business"):S.industry;
 const isMfg=()=>S.industry==="Manufacturer";
 const hasProp=()=>S.owns==="yes"||S.otherProp==="yes";
 
-function savings(){
-  const parts=[];let lo=0,hi=0,open=false;
-  if(hasProp()&&S.value!=null&&!VALUES[S.value].unk){const v=VALUES[S.value];const a=v.lo*COST_SEG,b=v.hi==null?null:v.hi*COST_SEG;
+function savings(){return savingsFor({owns:S.owns,otherProp:S.otherProp,value:S.value,emp:S.emp,t:S.industry})}
+function savingsFor(o){
+  const parts=[];let lo=0,hi=0,open=false;const hp=o.owns==="yes"||o.otherProp==="yes";
+  if(hp&&o.value!=null&&!VALUES[o.value].unk){const v=VALUES[o.value];const a=v.lo*COST_SEG,b=v.hi==null?null:v.hi*COST_SEG;
     parts.push({label:"Cost Segregation (the building)",lo:a,hi:b});lo+=a;if(b==null)open=true;else hi+=b;}
-  if(S.emp!=null&&!EMPS[S.emp].unk&&EMPS[S.emp].lo>0){const e=EMPS[S.emp],per=isMfg()?MFG_PER:NON_PER;const a=e.lo*per,b=e.hi==null?null:e.hi*per;
+  if(o.emp!=null&&!EMPS[o.emp].unk&&EMPS[o.emp].lo>0){const e=EMPS[o.emp],per=o.t==="Manufacturer"?MFG_PER:NON_PER;const a=e.lo*per,b=e.hi==null?null:e.hi*per;
     parts.push({label:"Employee-based tax credits",lo:a,hi:b});lo+=a;if(b==null)open=true;else hi+=b;}
   return {parts,lo,hi,open};
 }
@@ -153,7 +170,7 @@ const rangeTxt=(lo,hi,open)=>open||hi==null?money(lo)+"+":(lo===0?"Up to "+money
 
 // step lists per path
 function steps(){
-  if(S.path==="C")return["multi","cands","rel","owns","emp","details","preview","kit"];
+  if(S.path==="C")return["multi","cands","crel","cown","cemp","cteaser","ccontact","cresults"];
   return["name","industry","owns","emp","details","preview",S.path==="A"?"next":"kit"];
 }
 function go(n){step=n;render();window.scrollTo({top:0,behavior:"smooth"})}
@@ -181,6 +198,7 @@ function startHTML(){return`
 </div>`}
 
 function meterHTML(){
+  if(S.path==="C"&&step!=="multi"&&step!=="cands")return listMeterHTML();
   const s=savings(),v=S.value!=null?VALUES[S.value]:null,e=S.emp!=null?EMPS[S.emp]:null;
   const li=(done,t,d)=>`<li class="${done?"done":""}"><span class="ck">${done?"✓":""}</span><div>${t}${done&&d?`<em>${esc(d)}</em>`:""}</div></li>`;
   const relTxt=S.rel?(RELS[S.path==="C"?"C":"A"].find(r=>r[0]===S.rel)||[])[1]:"";
@@ -248,8 +266,42 @@ cands(){const groups=S.picks.map(t=>{const lab=t==="Something else"?"other busin
 return`<div class="q">Which businesses come to mind?</div>
 <p class="sub">The business name is enough. You don't need to know the owner yet. Know more than one? Add them all.</p>
 ${groups}
-<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><span style="display:flex;gap:14px;align-items:center"><span class="counter" id="ccnt"></span><button class="btn" id="nx" onclick="startCand(S.list.findIndex(e=>e.n.trim()))">Start with the first one →</button></span></div>`},
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><span style="display:flex;gap:14px;align-items:center"><span class="counter" id="ccnt"></span><button class="btn" id="nx" onclick="nextStep()">Continue →</button></span></div>`},
 
+crel(){const L=named();const ok=L.length&&L.every(i=>S.list[i].rel);
+return`${lhead("How do you know each of them?","One tap each. This helps us write the right approach for every business.")}
+${L.map(i=>lrow(i,chips(i,"rel",[["client","My client"],["friend","Know the owner"],["biz","Networking"],["know","Just know the business"]]))).join("")}
+${listBoost(ok?["Nice work!","That was the hardest part. Two more quick taps per business."]:null)}${navHTML(ok)}`},
+
+cown(){const L=named();const ok=L.length&&L.every(i=>{const e=S.list[i];return e.owns&&(e.owns!=="yes"||e.value!=null)});
+return`${lhead("Do they own their building?","Your best guess is fine. If yes, tell us roughly what it's worth.")}
+${L.map(i=>{const e=S.list[i];return lrow(i,chips(i,"owns",[["yes","Yes"],["no","No, they rent"],["unsure","Not sure"]])+(e.owns==="yes"?`<div style="margin-top:8px">${chips(i,"value",VALUES.map((x,k)=>[k,VSHORT[k]]))}</div>`:""))}).join("")}
+${listBoost(ok?["You're building a real list.","Owners of their building are exactly who Cost Seg is made for."]:null)}${navHTML(ok)}`},
+
+cemp(){const L=named();const ok=L.length&&L.every(i=>S.list[i].emp!=null);
+return`${lhead("About how many employees?","Your best guess is fine.")}
+${L.map(i=>lrow(i,chips(i,"emp",EMPS.map((x,k)=>[k,ESHORT[k]])))).join("")}
+${listBoost(ok?["Almost there!","Next you'll see everything you found."]:null)}${navHTML(ok,"See what I found")}`},
+
+cteaser(){const L=named();return`<div class="q">🎉 You spotted opportunities at ${L.length} ${L.length===1?"business":"businesses"}!</div>
+<p class="sub">Here's your list. One last step unlocks the savings for each one, plus your approach.</p>
+<div class="tcards">${L.map(i=>{const e=S.list[i];return`<div class="tcard"><div class="lname"><span class="gi">${icon(e.t)}</span><div><h4>${esc(e.n)}</h4><p>${esc(facts(e))}</p></div></div><div class="lock">🔒 Savings unlock in the next step</div></div>`}).join("")}</div>
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" onclick="nextStep()">Unlock my results →</button></div>`},
+
+ccontact(){const L=named();return`<div class="q">Let's customize your results</div>
+<p class="sub">Who owns each one? Just a name and email. We won't contact them. You stay in control. Don't know someone yet? Tap "I'll get this later."</p>
+${L.map(i=>{const e=S.list[i];return`<div class="crow ${e.later?"later":""}"><div class="lname"><span class="gi">${icon(e.t)}</span><b>${esc(e.n)}</b></div>${e.later?`<div class="laterNote">No problem. We'll give you an intro message for this one. <button class="link" onclick="S.list[${i}].later=false;render()">Undo</button></div>`:`<div class="cf"><input type="text" placeholder="Owner's first and last name" value="${esc(e.full||"")}" oninput="S.list[${i}].full=this.value"><input type="email" placeholder="Owner's email" value="${esc(e.email||"")}" oninput="S.list[${i}].email=this.value"></div><button class="link" style="font-size:13px" onclick="S.list[${i}].later=true;render()">I'll get this later</button>`}</div>`}).join("")}
+<div class="err" id="err"></div>
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" onclick="saveList()">Show my results →</button></div>`},
+
+cresults(){const L=named(),done=L.filter(i=>S.list[i].saved),later=L.filter(i=>!S.list[i].saved);
+let lo=0,hi=0,open=false;done.forEach(i=>{const s=savingsFor(S.list[i]);lo+=s.lo;if(s.open)open=true;else hi+=s.hi});
+const total=done.length?`<div class="big"><div><small>Across ${done.length} ${done.length===1?"business":"businesses"}, you could help uncover</small><div class="n">${(lo||hi)?rangeTxt(lo,hi,open):"Let's find out"}</div></div></div>`:"";
+return`<div class="q">Here's what you found</div>
+<p class="sub">${done.length?`${done.length} saved to your clients. `:""}An illustration based on typical results. Real numbers come from each business's Cash Recovery Analysis.</p>${total}
+${done.map(i=>resultCard(i)).join("")}${later.map(i=>laterCard(i)).join("")}
+<p style="margin-top:6px;font-size:16px;color:var(--ink)"><b>You bring the relationship. GMG brings the expertise.</b></p>
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" onclick="reset()">Find more opportunities →</button></div>${listDevHTML()}`},
 bizname(){const ok=S.company.trim().length>0;return`
 <div class="q">What's the name of the ${esc(ind().toLowerCase())} you're thinking of?</div><p class="sub">Just the business name is enough to get started.</p>
 <input type="text" placeholder="Business name" value="${esc(S.company)}" oninput="S.company=this.value;$('#nx').disabled=!this.value.trim()" onkeydown="if(event.key==='Enter'&&this.value.trim())nextStep()">
@@ -363,6 +415,37 @@ Tags: ${tags.join(", ")}
 
 No client emails: wizard entries are kept out of ActiveCampaign client follow-up.</code></details>`}
 
+const VSHORT=["Under $500K","$500K–$1M","$1M–$3M","Over $3M","No idea"];
+const ESHORT=["Just the owner","1–10","11–25","26–50","51–100","100+","Not sure"];
+function named(){return S.list.map((e,i)=>i).filter(i=>S.list[i].n.trim())}
+function lhead(q,sub){return`<div class="q">${q}</div><p class="sub">${sub}</p>`}
+function lrow(i,inner){const e=S.list[i];return`<div class="lrow"><div class="lname"><span class="gi">${icon(e.t)}</span><b>${esc(e.n)}</b></div><div>${inner}</div></div>`}
+function chips(i,key,list){const e=S.list[i];return`<div class="opts">${list.map(([v,t])=>`<button class="opt sm ${e[key]!=null&&String(e[key])===String(v)?"on":""}" onclick="setE(${i},'${key}','${v}')">${esc(t)}</button>`).join("")}</div>`}
+function setE(i,k,v){const e=S.list[i];e[k]=(k==="value"||k==="emp")?+v:v;if(k==="owns"&&v!=="yes")e.value=null;render()}
+function listBoost(B){return boost(B?B[0]:"",B?B[1]:"")}
+function facts(e){const a=[e.t==="Something else"?"Business":e.t];
+  if(e.owns==="yes")a.push("owns the building"+(e.value!=null&&!VALUES[e.value].unk?" ("+VSHORT[e.value]+")":""));else if(e.owns==="unsure")a.push("building: worth asking");
+  if(e.emp!=null&&!EMPS[e.emp].unk&&EMPS[e.emp].lo>0)a.push(ESHORT[e.emp]+" employees");return a.join(" · ")}
+function saveList(){const L=named();let bad=null;
+  L.forEach(i=>{const e=S.list[i];if(e.later)return;const p=(e.full||"").trim().split(/\s+/).filter(Boolean);
+    if(p.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e.email||"").trim()))bad=bad||e.n});
+  if(bad){$("#err").textContent=`Add the owner's first and last name and email for ${bad}, or tap "I'll get this later."`;return}
+  L.forEach(i=>{const e=S.list[i];if(e.later){e.saved=false;return}const p=e.full.trim().split(/\s+/);e.first=p[0];e.last=p.slice(1).join(" ");e.saved=true});nextStep()}
+function withE(e,fn){const keep={first:S.first,company:S.company,industry:S.industry,rel:S.rel,owns:S.owns,otherProp:S.otherProp};
+  Object.assign(S,{first:e.first||"",company:e.n,industry:e.t,rel:e.rel,owns:e.owns,otherProp:null});const r=fn();Object.assign(S,keep);return r}
+function resultCard(i){const e=S.list[i],s=savingsFor(e),m=withE(e,messages);
+  return`<div class="rcard"><div class="rh"><div class="lname"><span class="gi">${icon(e.t)}</span><div><b>${esc(e.n)}</b><div style="font-size:13px;color:var(--muted)">${esc(e.first)} ${esc(e.last)} · saved to your clients ✓</div></div></div><div class="ramt">${s.parts.length?rangeTxt(s.lo,s.hi,s.open):"Worth a look"}</div></div>
+  ${s.parts.length?`<div class="rows" style="margin:12px 0">${s.parts.map(p=>`<div><span>${p.label}</span><b>${rangeTxt(p.lo,p.hi,p.hi==null)}</b></div>`).join("")}</div>`:""}
+  <div class="msg" style="margin-top:12px"><div class="mh"><b>Text to ${esc(e.first)}</b><button class="btn sec copy" onclick="copy('m${i}')">Copy</button></div><pre id="m${i}">${esc(m.text)}</pre></div></div>`}
+function laterCard(i){const e=S.list[i];const t=`Hi, I know we haven't had a chance to connect yet, but I wanted to reach out. I help business owners find tax savings they've overlooked, especially owners of commercial property. I thought ${e.n} might be worth a look. Would you be open to a quick conversation?`;
+  return`<div class="rcard"><div class="rh"><div class="lname"><span class="gi">${icon(e.t)}</span><div><b>${esc(e.n)}</b><div style="font-size:13px;color:var(--muted)">Get the owner's info, then come back to unlock</div></div></div><div class="ramt" style="color:var(--muted)">🔒</div></div>
+  <div class="msg" style="margin-top:12px"><div class="mh"><b>Intro message</b><button class="btn sec copy" onclick="copy('l${i}')">Copy</button></div><pre id="l${i}">${esc(t)}</pre></div></div>`}
+function listMeterHTML(){const L=named(),sv=L.filter(i=>S.list[i].saved);let lo=0,hi=0,open=false;sv.forEach(i=>{const s=savingsFor(S.list[i]);lo+=s.lo;if(s.open)open=true;else hi+=s.hi});
+  return`<aside class="meter"><div class="top"><div class="eyebrow">Your list</div><div class="who">${L.length} ${L.length===1?"business":"businesses"}</div></div>
+  <div class="amt"><small>Potential tax savings</small><div>${sv.length?((lo||hi)?rangeTxt(lo,hi,open):"Let's find out"):`<span style="font-size:15px;font-weight:700;color:var(--muted);letter-spacing:0">🔒 Unlocks with your results</span>`}</div></div>
+  <ul>${L.map(i=>{const e=S.list[i];const d=[e.rel,e.owns,e.emp!=null].filter(Boolean).length;return`<li class="${e.saved||d===3?"done":""}"><span class="ck">${e.saved||d===3?"✓":""}</span><div>${icon(e.t)} ${esc(e.n)}<em>${e.saved?"Saved to your clients":e.later?"Get info later":d===3?"Ready":d+" of 3 answered"}</em></div></li>`}).join("")}</ul></aside>`}
+function listDevHTML(){const L=named().filter(i=>S.list[i].saved);if(!L.length)return"";
+  return`<details class="dev"><summary>What gets saved (for the build team)</summary><code>${L.map(i=>{const e=S.list[i];return`Client Creator Short: ${esc(e.first)} | ${esc(e.last)} | ${esc(e.email)} | ${esc(e.n)} | ${esc(e.t)}\nTags: wizard-v1, wizard-path-C, wizard-rel-${e.rel}, wizard-own-${e.owns}${e.value!=null?", wizard-value-"+["u500k","500k-1m","1m-3m","3m-plus","unknown"][e.value]:""}, wizard-emp-${["0","1-10","11-25","26-50","51-100","100-plus","unknown"][e.emp]}`}).join("\n\n")}\n\nNo client emails: wizard entries are kept out of ActiveCampaign client follow-up.</code></details>`}
 function save(){const e=$("#err");
   if(!S.first.trim()||!S.last.trim()||!S.company.trim()){e.textContent="Please fill in first name, last name and business name.";return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim())){e.textContent="Please enter their email address.";return}
