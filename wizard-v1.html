@@ -130,7 +130,7 @@ const RELS={A:[["client","They're already my client"],["friend","A friend or fam
 const COST_SEG=0.074, MFG_PER=3200, NON_PER=0.20*2400;
 
 let S, step;
-function reset(){S={path:null,first:"",last:"",company:"",email:"",rel:null,industry:null,other:"",owns:null,otherProp:null,value:null,emp:null,saved:false,picks:[],cands:{},done:[]};step="start";render()}
+function reset(){S={path:null,first:"",last:"",company:"",email:"",rel:null,industry:null,other:"",owns:null,otherProp:null,value:null,emp:null,saved:false,picks:[],cands:{},done:[],list:[],cur:null,full:""};step="start";render()}
 const $=s=>document.querySelector(s);
 const money=n=>"$"+Math.round(n).toLocaleString();
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -151,7 +151,7 @@ const rangeTxt=(lo,hi,open)=>open||hi==null?money(lo)+"+":(lo===0?"Up to "+money
 
 // step lists per path
 function steps(){
-  if(S.path==="C")return["multi","rel","owns","emp","details","preview","kit"];
+  if(S.path==="C")return["multi","cands","rel","owns","emp","details","preview","kit"];
   return["name","industry","owns","emp","details","preview",S.path==="A"?"next":"kit"];
 }
 function go(n){step=n;render();window.scrollTo({top:0,behavior:"smooth"})}
@@ -195,7 +195,7 @@ function pillsHTML(isOn,click,others){const b=t=>`<button class="opt ${isOn(t)?"
   return`<div id="pills"><div class="eyebrow" style="margin:4px 0 10px">⭐ Strongest for Cost Seg</div><div class="opts pills">${TOP.map(b).join("")}</div>
   <div class="eyebrow" style="margin:22px 0 10px;color:var(--muted)">Other businesses</div><div class="opts pills">${others.concat("Something else").map(b).join("")}</div></div>`}
 function pickInd(t){pick("industry",t)}
-function submitName(){if(S.first.trim()){S.nameDone=true;render()}}
+function submitName(){const p=(S.full||"").trim().split(/\s+/).filter(Boolean);if(!p.length)return;S.first=p[0];S.last=p.slice(1).join(" ");S.nameDone=true;render()}
 function relBlock(){const n=esc(who());const list=RELS[S.path==="C"?"C":"A"];const B={
 client:["You're already in a great position!",`${n} already trusts you. Bringing them money they didn't know about makes you look even better.`],
 friend:["The easiest conversation you'll have.",`You're not selling anything. You're looking out for someone you care about.`],
@@ -205,8 +205,8 @@ return{html:opts("rel",list,"col"),B}}
 
 const SCREENS={
 name(){const has=S.nameDone&&S.first.trim();const r=relBlock();return`
-<div class="q">Who came to mind?</div><p class="sub">Just their first name. That's all we need to get started.</p>
-<div style="display:flex;gap:10px"><input type="text" id="fn" placeholder="First name" value="${esc(S.first)}" oninput="S.first=this.value" onkeydown="if(event.key==='Enter')submitName()"><button class="btn" style="flex:none" onclick="submitName()">${has?"Update":"Go"}</button></div>
+<div class="q">Who came to mind?</div><p class="sub">Their first and last name. That's all we need to get started.</p>
+<div style="display:flex;gap:10px"><input type="text" id="fn" placeholder="First and last name" value="${esc(S.full||"")}" oninput="S.full=this.value" onkeydown="if(event.key==='Enter')submitName()"><button class="btn" style="flex:none" onclick="submitName()">${has?"Update":"Go"}</button></div>
 ${has?`<div style="margin-top:28px"><div class="q" style="font-size:22px">How do you know ${esc(S.first)}?</div><p class="sub">This helps us shape the right approach for you.</p>${r.html}</div>`:""}
 ${boost(r.B[0],r.B[1])}${navHTML(has&&!!S.rel)}`},
 
@@ -218,25 +218,35 @@ const sub=C?"A client, a friend, a business you visit, or someone you've met. Ta
 const B=S.industry?(C?["Great place to start looking!",`Think of a ${esc(ind().toLowerCase())} you visit, an owner you've met, or someone who could introduce you.`]:
  isMfg()?["Manufacturers are some of our best fits.","They often qualify for more than one incentive, from the building to the people they employ."]:
  ["Good to know!",`${esc(ind())} owners can have overlooked tax savings tied to their building and their employees.`]):[];
-return`<div class="q">${q}</div><p class="sub">${sub}</p>
+const n=esc(who());
+if(!S.industry)return`<div class="q">${q}</div><p class="sub">${sub}</p>
 <div class="search"><input type="text" id="srch" placeholder="Search industries…" oninput="filterInd(this.value)"></div>
-<div class="opts pills" id="pills">${INDUSTRIES.concat("Something else").map(t=>`<button class="opt ${S.industry===t?"on":""}" data-t="${esc(t.toLowerCase())}" onclick="pickInd('${t}')">${esc(t)}</button>`).join("")}</div>
+<div class="opts pills" id="pills">${INDUSTRIES.concat("Something else").map(t=>`<button class="opt" data-t="${esc(t.toLowerCase())}" onclick="pickInd('${t}')">${esc(t)}</button>`).join("")}</div>
+${navHTML(false)}`;
+const ok=S.company.trim().length>0;
+return`<div class="q">${q}</div>
+<div class="opts" style="align-items:center;margin-top:14px"><button class="opt on">✓ ${esc(S.industry)}</button><button class="link" onclick="S.industry=null;render()">Change</button></div>
 ${S.industry==="Something else"?`<div style="margin-top:14px"><input type="text" placeholder="What kind of business?" value="${esc(S.other)}" oninput="S.other=this.value"></div>`:""}
-${boost(B[0],B[1])}${navHTML(!!S.industry)}`},
+${boost(B[0],B[1])}
+<div style="margin-top:28px"><div class="q" style="font-size:22px">What's the name of ${n}'s business?</div><p class="sub">So we can personalize ${n}'s results.</p>
+<input type="text" id="co" placeholder="Business name" value="${esc(S.company)}" oninput="S.company=this.value;$('#nx').disabled=!this.value.trim()" onkeydown="if(event.key==='Enter'&&this.value.trim())nextStep()"></div>
+${navHTML(ok)}`},
 
-multi(){const tile=(ic,t,h)=>{const on=S.picks.includes(t);return`<div class="tile ${on?"on":""}" onclick="if(event.target.tagName!=='INPUT')togglePick('${t}')"><span class="ck">${on?"✓":""}</span><div class="ic">${ic}</div><h4>${esc(t)}</h4>${h?`<p>${h}</p>`:""}<div class="nm"><input type="text" data-p="${esc(t)}" placeholder="Business name" value="${esc(S.cands[t]||"")}" oninput="S.cands['${t}']=this.value;multiState()"></div></div>`};
+multi(){const tile=(ic,t,h,label)=>{const on=S.picks.includes(t);return`<div class="tile ${on?"on":""}" onclick="togglePick('${t}')"><span class="ck">${on?"✓":""}</span><div class="ic">${ic}</div><h4>${esc(label||t)}</h4>${h?`<p>${h}</p>`:""}</div>`};
 return`<div class="q">Who do you know that owns one of these?</div>
-<p class="sub">Think about your area: the hotel down the street, the restaurant you love, your dentist, the dealership you buy from. These are the businesses that win biggest with Cost Seg. Tap any you know, even a little, and add the business name.</p>
+<p class="sub">Think about your area: the hotel down the street, the restaurant you love, your dentist, the dealership you buy from. These are the businesses that win biggest with Cost Seg. Tap every one you know, even a little.</p>
 <div class="tiles">${TOP_HOOKS.map(([ic,t,h])=>tile(ic,t,h)).join("")}</div>
-${S.showMore?`<div class="eyebrow" style="margin:24px 0 10px;color:var(--muted)">Other businesses</div><div class="tiles small">${OTHERS_C.concat("Something else").map(t=>tile("🏪",t==="Something else"?"Another business":t,"")).join("")}</div>`
+${S.showMore?`<div class="eyebrow" style="margin:24px 0 10px;color:var(--muted)">Other businesses</div><div class="tiles small">${OTHERS_C.concat("Something else").map(t=>tile("🏪",t,"",t==="Something else"?"Another business":t)).join("")}</div>`
 :`<div class="more">Know a different kind of business? <button onclick="S.showMore=true;render()">See more businesses →</button></div>`}
-<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><span style="display:flex;gap:14px;align-items:center"><span class="counter" id="mcnt"></span><button class="btn" id="nx" onclick="startCand(S.picks.find(t=>(S.cands[t]||'').trim()))">Continue →</button></span></div>`},
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><span style="display:flex;gap:14px;align-items:center"><span class="counter" id="mcnt"></span><button class="btn" id="nx" onclick="goCands()">Continue →</button></span></div>`},
 
-cands(){const ok=S.picks.some(t=>(S.cands[t]||"").trim());return`
-<div class="q">Which businesses come to mind?</div>
-<p class="sub">Type the name for each one. The business name is enough. You don't need to know the owner yet.</p>
-<div class="fields">${S.picks.map(t=>`<div class="full"><label class="f">${esc(t==="Something else"?"Another business":t)}</label><input type="text" placeholder="Business name" value="${esc(S.cands[t]||"")}" oninput="S.cands['${t}']=this.value;$('#nx').disabled=!S.picks.some(x=>(S.cands[x]||'').trim())"></div>`).join("")}</div>
-${boost("","")}<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" id="nx" ${ok?"":"disabled"} onclick="startCand(S.picks.find(t=>(S.cands[t]||'').trim()))">Start with the first one →</button></div>`},
+cands(){const groups=S.picks.map(t=>{const lab=t==="Something else"?"other business":t.toLowerCase();
+  const rows=S.list.map((e,i)=>e.t===t?`<input type="text" style="margin-top:8px" placeholder="Business name" value="${esc(e.n)}" oninput="S.list[${i}].n=this.value;candState()">`:"").join("");
+  return`<div style="margin:0 0 22px"><label class="f" style="font-size:14px;text-transform:none;letter-spacing:0;color:var(--ink)">What's the name of the ${esc(lab)}?</label>${rows}<button class="link" style="margin-top:8px;font-size:13px" onclick="S.list.push({t:'${t}',n:''});render()">+ Add another ${esc(lab)}</button></div>`}).join("");
+return`<div class="q">Which businesses come to mind?</div>
+<p class="sub">The business name is enough. You don't need to know the owner yet. Know more than one? Add them all.</p>
+${groups}
+<div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><span style="display:flex;gap:14px;align-items:center"><span class="counter" id="ccnt"></span><button class="btn" id="nx" onclick="startCand(S.list.findIndex(e=>e.n.trim()))">Start with the first one →</button></span></div>`},
 
 bizname(){const ok=S.company.trim().length>0;return`
 <div class="q">What's the name of the ${esc(ind().toLowerCase())} you're thinking of?</div><p class="sub">Just the business name is enough to get started.</p>
@@ -282,13 +292,14 @@ return`${savedHTML()}<div class="q">Here's what you could do for ${n}</div><p cl
 
 details(){const C=S.path==="C";const n=esc(who());
 const who2=C?esc(S.company):n;
+if(!C&&S._needLast==null)S._needLast=!S.last.trim();
+const cnt=C?3:(S._needLast?2:1);
 return`<div class="q">Let's customize ${who2}'s results</div>
-<p class="sub">Just 3 quick details and we'll tailor the savings picture and your approach. We won't contact them. You stay in control.</p>
+<p class="sub">${cnt===1?"Just one quick detail":`Just ${cnt} quick details`} and we'll tailor the savings picture and your approach. We won't contact them. You stay in control.</p>
 <div class="fields">
 ${C?`<div><label class="f">Owner's first name</label><input type="text" id="d1" value="${esc(S.first)}" oninput="S.first=this.value"></div>
 <div><label class="f">Owner's last name</label><input type="text" id="d2" value="${esc(S.last)}" oninput="S.last=this.value"></div>`
-:`<div><label class="f">${n}'s last name</label><input type="text" id="d2" value="${esc(S.last)}" oninput="S.last=this.value"></div>
-<div><label class="f">Business name</label><input type="text" id="d3" value="${esc(S.company)}" oninput="S.company=this.value"></div>`}
+:S._needLast?`<div class="full"><label class="f">${n}'s last name</label><input type="text" id="d2" value="${esc(S.last)}" oninput="S.last=this.value"></div>`:""}
 <div class="full"><label class="f">${C?"Owner's":n+"'s"} email</label><input type="email" id="d4" value="${esc(S.email)}" oninput="S.email=this.value"></div>
 </div><div class="err" id="err"></div>
 ${C?`<p style="margin-top:6px"><button class="link" onclick="go('intro')">I don't know the owner's name or email yet</button></p>`:""}
@@ -354,19 +365,20 @@ function save(){const e=$("#err");
   if(!S.first.trim()||!S.last.trim()||!S.company.trim()){e.textContent="Please fill in first name, last name and business name.";return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim())){e.textContent="Please enter their email address.";return}
   S.saved=true;go("preview")}
-function togglePick(t){const i=S.picks.indexOf(t);if(i>=0)S.picks.splice(i,1);else S.picks.push(t);render();
-  if(i<0){const f=document.querySelector(`.tile input[data-p="${t}"]`);if(f)f.focus()}}
-function multiState(){const named=S.picks.filter(t=>(S.cands[t]||"").trim()).length,c=$("#mcnt"),b=$("#nx");if(!c)return;
-  c.textContent=named===0?(S.picks.length?"Add a business name to continue":"Tap a business you know"):named===1?"🎉 1 opportunity found":`🎉 ${named} opportunities found`;
-  b.disabled=named===0}
-function startCand(t){S.industry=t;S.company=S.cands[t]||"";go("rel")}
-function nextUp(){return S.picks.filter(t=>(S.cands[t]||"").trim()&&t!==S.industry&&!S.done.includes(t))}
-function nextCand(t){S.done.push(S.industry);Object.assign(S,{first:"",last:"",email:"",rel:null,owns:null,otherProp:null,value:null,emp:null,saved:false});startCand(t)}
+function togglePick(t){const i=S.picks.indexOf(t);if(i>=0){S.picks.splice(i,1);S.list=S.list.filter(e=>e.t!==t)}else S.picks.push(t);render()}
+function multiState(){const k=S.picks.length,c=$("#mcnt"),b=$("#nx");if(!c)return;
+  c.textContent=k===0?"Tap a business you know":k===1?"🎉 1 opportunity spotted":`🎉 ${k} opportunities spotted`;b.disabled=k===0}
+function goCands(){S.picks.forEach(t=>{if(!S.list.some(e=>e.t===t))S.list.push({t,n:""})});go("cands")}
+function candState(){const k=S.list.filter(e=>e.n.trim()).length,c=$("#ccnt"),b=$("#nx");if(!c)return;
+  c.textContent=k===0?"Add at least one name":k===1?"🎉 1 business named":`🎉 ${k} businesses named`;b.disabled=k===0}
+function startCand(i){if(i<0)return;S.cur=i;S.industry=S.list[i].t;S.company=S.list[i].n;go("rel")}
+function nextUp(){return S.list.map((e,i)=>i).filter(i=>S.list[i].n.trim()&&i!==S.cur&&!S.done.includes(i))}
+function nextCand(i){S.done.push(S.cur);Object.assign(S,{first:"",last:"",email:"",rel:null,owns:null,otherProp:null,value:null,emp:null,saved:false});startCand(i)}
 function nextUpHTML(){if(S.path!=="C")return"";const L=nextUp();if(!L.length)return"";
-  return`<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--rule)"><div class="eyebrow">Next up on your list</div><div class="opts">${L.map(t=>`<button class="opt" onclick="nextCand('${t}')">${esc(S.cands[t])} <span style="color:var(--muted);font-weight:400">· ${esc(t==="Something else"?"Business":t)}</span> →</button>`).join("")}</div></div>`}
+  return`<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--rule)"><div class="eyebrow">Next up on your list</div><div class="opts">${L.map(i=>{const e=S.list[i];return`<button class="opt" onclick="nextCand(${i})">${esc(e.n)} <span style="color:var(--muted);font-weight:400">· ${esc(e.t==="Something else"?"Business":e.t)}</span> →</button>`}).join("")}</div></div>`}
 function filterInd(q){q=q.toLowerCase().trim();document.querySelectorAll("#pills .opt").forEach(b=>{b.style.display=!q||b.dataset.t.includes(q)||b.dataset.t==="something else"?"":"none"})}
 function copy(id){navigator.clipboard&&navigator.clipboard.writeText($("#"+id).textContent);toast("Copied")}
 function toast(t){const x=$("#toast");x.textContent=t;x.classList.add("show");clearTimeout(x._t);x._t=setTimeout(()=>x.classList.remove("show"),2600)}
-function after(){if(step==="multi")multiState();const f=document.querySelector(".card input[type=text]");if(f&&((step==="name"&&!S.nameDone)||step==="bizname")){f.focus();f.setSelectionRange(f.value.length,f.value.length)}}
+function after(){if(step==="multi")multiState();if(step==="cands")candState();if(step==="industry"&&S.industry){const c=$("#co");if(c&&!c.value)c.focus()}const f=document.querySelector(".card input[type=text]");if(f&&((step==="name"&&!S.nameDone)||step==="bizname")){f.focus();f.setSelectionRange(f.value.length,f.value.length)}}
 reset();
 </script></body></html>
