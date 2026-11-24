@@ -135,6 +135,8 @@ const $=s=>document.querySelector(s);
 const money=n=>"$"+Math.round(n).toLocaleString();
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const who=()=>S.first||S.company||"this business";
+const icon=t=>{const h=TOP_HOOKS.find(x=>x[1]===t);return h?h[0]:"ðª"};
+const em=()=>S.industry?icon(S.industry)+" ":"";
 const ind=()=>S.industry==="Something else"?(S.other||"business"):S.industry;
 const isMfg=()=>S.industry==="Manufacturer";
 const hasProp=()=>S.owns==="yes"||S.otherProp==="yes";
@@ -183,7 +185,7 @@ function meterHTML(){
   const li=(done,t,d)=>`<li class="${done?"done":""}"><span class="ck">${done?"✓":""}</span><div>${t}${done&&d?`<em>${esc(d)}</em>`:""}</div></li>`;
   const relTxt=S.rel?(RELS[S.path==="C"?"C":"A"].find(r=>r[0]===S.rel)||[])[1]:"";
   const ownTxt=S.owns==="yes"?"Owns the building":S.owns==="unsure"?"Not sure yet (a great question to ask)":S.owns==="no"?(S.otherProp==="yes"?"Rents, but owns other property":S.otherProp?"Rents":""):"";
-  return`<aside class="meter"><div class="top"><div class="eyebrow">Opportunity</div><div class="who">${esc(S.first?S.first+(S.company?" · "+S.company:""):(S.company||"Your next client"))}</div></div>
+  return`<aside class="meter"><div class="top"><div class="eyebrow">Opportunity</div><div class="who">${em()}${esc(S.first?S.first+(S.company?" · "+S.company:""):(S.company||"Your next client"))}</div></div>
   <div class="amt"><small>Potential tax savings</small><div>${!S.saved?`<span style="font-size:15px;font-weight:700;color:var(--muted);letter-spacing:0">🔒 Unlocks with ${esc(S.first||"their")}${S.first?"'s":""} results</span>`:s.parts.length?rangeTxt(s.lo,s.hi,s.open):"Let's find out"}</div></div>
   <ul>${li(!!S.rel,"How you know them",relTxt)}${li(!!S.industry,"Industry",S.industry?ind():"")}${li(S.owns&&(S.owns!=="no"||S.otherProp),"Property",ownTxt)}${li(v,"Building value",v?v.t:"")}${li(e,"Employees",e?e.t:"")}${li(S.saved,"Saved to My Clients",S.saved?"Client card created":"")}</ul></aside>`}
 
@@ -211,7 +213,7 @@ ${has?`<div style="margin-top:28px"><div class="q" style="font-size:22px">How do
 ${boost(r.B[0],r.B[1])}${navHTML(has&&!!S.rel)}`},
 
 rel(){const n=esc(who());const r=relBlock();
-return`<div class="q">How do you know ${n}?</div><p class="sub">This helps us shape the right approach for you.</p>${r.html}${boost(r.B[0],r.B[1])}${navHTML(!!S.rel)}`},
+return`<div class="q">${em()}How do you know ${n}?</div><p class="sub">This helps us shape the right approach for you.</p>${r.html}${boost(r.B[0],r.B[1])}${navHTML(!!S.rel)}`},
 
 industry(){const C=S.path==="C";const q=C?"Do you know anyone who owns one of these?":`What kind of business does ${esc(who())} have?`;
 const sub=C?"A client, a friend, a business you visit, or someone you've met. Tap the first one that brings someone to mind.":"Pick the closest match.";
@@ -241,8 +243,8 @@ ${S.showMore?`<div class="eyebrow" style="margin:24px 0 10px;color:var(--muted)"
 <div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><span style="display:flex;gap:14px;align-items:center"><span class="counter" id="mcnt"></span><button class="btn" id="nx" onclick="goCands()">Continue →</button></span></div>`},
 
 cands(){const groups=S.picks.map(t=>{const lab=t==="Something else"?"other business":t.toLowerCase();
-  const rows=S.list.map((e,i)=>e.t===t?`<input type="text" style="margin-top:8px" placeholder="Business name" value="${esc(e.n)}" oninput="S.list[${i}].n=this.value;candState()">`:"").join("");
-  return`<div style="margin:0 0 22px"><label class="f" style="font-size:14px;text-transform:none;letter-spacing:0;color:var(--ink)">What's the name of the ${esc(lab)}?</label>${rows}<button class="link" style="margin-top:8px;font-size:13px" onclick="S.list.push({t:'${t}',n:''});render()">+ Add another ${esc(lab)}</button></div>`}).join("");
+  const rows=S.list.map((e,i)=>e.t===t?`<div style="display:flex;gap:12px;align-items:center;margin-top:10px"><span class="gi" style="width:46px;height:46px;font-size:24px">${icon(t)}</span><input type="text" placeholder="Name of the ${esc(lab)}" value="${esc(e.n)}" oninput="S.list[${i}].n=this.value;candState()"></div>`:"").join("");
+  return`<div style="margin:0 0 22px"><label class="f" style="font-size:14px;text-transform:none;letter-spacing:0;color:var(--ink)">What's the name of the ${esc(lab)}?</label>${rows}<button class="link" style="margin:10px 0 0 58px;font-size:13px" onclick="S.list.push({t:'${t}',n:''});render()">+ Add another ${esc(lab)}</button></div>`}).join("");
 return`<div class="q">Which businesses come to mind?</div>
 <p class="sub">The business name is enough. You don't need to know the owner yet. Know more than one? Add them all.</p>
 ${groups}
@@ -261,7 +263,7 @@ if(S.owns==="no"&&S.otherProp&&S.otherProp!=="yes")B=["Good to know.","There may
 const v=S.value!=null?VALUES[S.value]:null;
 if(hasProp()&&v)B=v.unk?["That's okay!","You don't need all the answers. The real numbers come from their free Cash Recovery Analysis."]:["Now we're getting somewhere!","Property in this range can hold real savings. You'll see the numbers in just a moment."];
 const ok=S.owns&&(S.owns!=="no"||S.otherProp)&&(!hasProp()||S.value!=null);
-return`<div class="q">Does ${n} own the building where the business operates?</div><p class="sub">Your best guess is fine.</p>
+return`<div class="q">${em()}Does ${n} own the building where the business operates?</div><p class="sub">Your best guess is fine.</p>
 ${opts("owns",[["yes","Yes, they own it"],["no","No, they rent"],["unsure","I'm not sure"]])}
 ${S.owns==="no"?`<p class="sub" style="margin:22px 0 10px;font-weight:600;color:var(--ink)">Do they own any other commercial or rental property?</p>${opts("otherProp",[["yes","Yes"],["none","No"],["unsure","I'm not sure"]])}`:""}
 ${hasProp()?`<div style="margin-top:28px"><div class="q" style="font-size:22px">Any idea what it's worth?</div><p class="sub">A rough guess is fine.</p>${opts("value",VALUES.map((x,i)=>[i,x.t]))}</div>`:""}
@@ -277,7 +279,7 @@ emp(){const n=esc(who());const e=S.emp!=null?EMPS[S.emp]:null;let B=[];
 if(e&&e.unk)B=["No problem!","GMG can look at employee-based credits once there's more information."];
 else if(e&&e.lo===0)B=["Good to know.","We'll focus on the property."];
 else if(e)B=["Even better. There may be more than one way to help!","Businesses with employees can qualify for employee-based tax credits on top of the building."];
-return`<div class="q">About how many employees does ${n} have?</div><p class="sub">Your best guess is fine.</p>
+return`<div class="q">${em()}About how many employees does ${n} have?</div><p class="sub">Your best guess is fine.</p>
 ${opts("emp",EMPS.map((x,i)=>[i,x.t]))}${boost(B[0],B[1])}${navHTML(S.emp!=null)}`},
 
 preview(){const n=esc(who()),s=savings();const v=S.value!=null?VALUES[S.value]:null,e=S.emp!=null?EMPS[S.emp]:null;
@@ -285,7 +287,7 @@ const desc=[`a ${esc(ind().toLowerCase())}`];if(hasProp()&&v&&!v.unk)desc.push(`
 const head=s.parts.length?`<div class="big"><div><small>Businesses like ${n}'s typically uncover</small><div class="n">${rangeTxt(s.lo,s.hi,s.open)}</div></div></div>
 <div class="rows">${s.parts.map(p=>`<div><span>${p.label}</span><b>${rangeTxt(p.lo,p.hi,p.hi==null)}</b></div>`).join("")}${S.owns==="unsure"||S.otherProp==="unsure"?`<div><span>Cost Segregation, if they own the building</span><b>Worth asking</b></div>`:""}</div>`
 :`<div class="big"><div><small>The opportunity</small><div class="n" style="font-size:30px">Let's find out together</div></div></div><p>We don't have enough yet for an estimate, and that's fine. ${n}'s free Cash Recovery Analysis will show the real numbers.</p>`;
-return`${savedHTML()}<div class="q">Here's what you could do for ${n}</div><p class="sub">Based on ${desc.join(", ")}.</p>${head}
+return`${savedHTML()}<div class="q">${em()}Here's what you could do for ${n}</div><p class="sub">Based on ${desc.join(", ")}.</p>${head}
 <p class="fine">An illustration based on typical results for businesses like this. Not a calculated estimate or guarantee. ${n}'s actual savings come from their Cash Recovery Analysis.</p>
 <p style="margin-top:18px;font-size:16px;color:var(--ink)"><b>You bring the relationship. GMG brings the expertise.</b> You don't have to know the tax rules or run the numbers.</p>
 <div class="nav"><button class="btn ghost" onclick="go('details')">← Back</button><button class="btn" onclick="nextStep()">${S.path==="A"?"What's next":"Help me approach "+n} →</button></div>`},
@@ -294,7 +296,7 @@ details(){const C=S.path==="C";const n=esc(who());
 const who2=C?esc(S.company):n;
 if(!C&&S._needLast==null)S._needLast=!S.last.trim();
 const cnt=C?3:(S._needLast?2:1);
-return`<div class="q">Let's customize ${who2}'s results</div>
+return`<div class="q">${em()}Let's customize ${who2}'s results</div>
 <p class="sub">${cnt===1?"Just one quick detail":`Just ${cnt} quick details`} and we'll tailor the savings picture and your approach. We won't contact them. You stay in control.</p>
 <div class="fields">
 ${C?`<div><label class="f">Owner's first name</label><input type="text" id="d1" value="${esc(S.first)}" oninput="S.first=this.value"></div>
@@ -306,20 +308,20 @@ ${C?`<p style="margin-top:6px"><button class="link" onclick="go('intro')">I don'
 <div class="nav"><button class="btn ghost" onclick="prevStep()">← Back</button><button class="btn" onclick="save()">Show ${who2}'s results →</button></div>`},
 
 next(){const n=esc(who());return`
-<div class="q">What would you like to do next?</div><p class="sub">Two ways to turn ${n}'s potential into a real opportunity.</p>
+<div class="q">${em()}What would you like to do next?</div><p class="sub">Two ways to turn ${n}'s potential into a real opportunity.</p>
 <div class="choice">
 <button class="goal" onclick="go('calc')"><div class="hd"><span class="gi">🧮</span><h4>Let's calculate ${n}'s savings</h4></div><p>I have ${n}'s info, or I'm with ${n} right now. Build the Cash Recovery Analysis.</p></button>
 <button class="goal" onclick="go('kit')"><div class="hd"><span class="gi">💬</span><h4>Help me approach ${n}</h4></div><p>Give me the words to start the conversation.</p></button>
 </div>${devHTML()}`},
 
 calc(){const n=esc(who());return`<div class="eyebrow">Cash Recovery Analysis</div>
-<div class="q">Let's put real numbers behind it</div><p class="sub">${n}'s record is saved, so we already have a head start.</p>
+<div class="q">${em()}Let's put real numbers behind it</div><p class="sub">${n}'s record is saved, so we already have a head start.</p>
 <div class="known"><span>${esc(S.company)}</span><span>${esc(ind())}</span>${S.value!=null?`<span>${esc(VALUES[S.value].t)}</span>`:""}${S.emp!=null?`<span>${esc(EMPS[S.emp].t)} employees</span>`:""}</div>
 <div class="msg"><div class="mh"><b>With ${n} right now? Say this</b></div><pre>"${S.first||"Hi"}, I want to show you something. Your building might qualify for tax savings that could put real money back into the business. Let's answer a few questions together and see what the numbers look like."</pre></div>
 <div class="nav"><button class="btn ghost" onclick="go(S.path==='A'?'next':'kit')">← Back</button><button class="btn" onclick="toast('In the live version, this opens the calculator with ${n}\\'s saved record.')">Open ${n}'s Cash Recovery Analysis →</button></div>`},
 
 kit(){const n=esc(who());const m=messages();return`
-<div class="eyebrow">Your approach</div><div class="q">Here's how to start the conversation with ${n}</div>
+<div class="eyebrow">Your approach</div><div class="q">${em()}Here's how to start the conversation with ${n}</div>
 <p class="sub">Written for how you know ${n}. Send it yourself, your way.</p>
 <div class="msg"><div class="mh"><b>Text message</b><button class="btn sec copy" onclick="copy('t1')">Copy</button></div><pre id="t1">${esc(m.text)}</pre></div>
 <div class="msg"><div class="mh"><b>Email</b><button class="btn sec copy" onclick="copy('t2')">Copy</button></div><pre id="t2">${esc(m.email)}</pre></div>
@@ -327,7 +329,7 @@ kit(){const n=esc(who());const m=messages();return`
 <div class="nav"><button class="btn ghost" onclick="${S.path==="A"?"go('next')":"reset()"}">${S.path==="A"?"← Back":"Start another"}</button><button class="btn" onclick="go('calc')">Build ${n}'s Cash Recovery Analysis →</button></div>${nextUpHTML()}${S.path==="A"?"":devHTML()}`},
 
 intro(){const b=esc(S.company);const m=`Hi, I know we haven't had a chance to connect yet, but I wanted to reach out. I help business owners find tax savings they've overlooked, especially owners of commercial property. I thought ${S.company} might be worth a look. Would you be open to a quick conversation?`;
-return`<div class="eyebrow">Your first move</div><div class="q">Here's a simple way to open the door with ${b}</div>
+return`<div class="eyebrow">Your first move</div><div class="q">${em()}Here's a simple way to open the door with ${b}</div>
 <p class="sub">Once you have the owner's name and email, come back and we'll save them to your clients and build their analysis.</p>
 <div class="msg"><div class="mh"><b>Introduction</b><button class="btn sec copy" onclick="copy('t3')">Copy</button></div><pre id="t3">${esc(m)}</pre></div>
 <div class="nav"><button class="btn ghost" onclick="go('details')">← Back</button><button class="btn" onclick="reset()">Find another opportunity →</button></div>${nextUpHTML()}`}
